@@ -1,0 +1,89 @@
+/* app css stylesheet */
+
+input.filter {
+  border: 1px solid #D1D1D1;
+  padding: 3px;
+  width: 300px;
+}
+
+#top-header {
+  height: 36px;
+  background-color: black;
+  color: #eee;
+  border-top: 2px solid #1688c0;
+}
+
+#top-header span {
+  line-height: 36px;
+  margin-left: 15px;
+}
+
+#top-header span.primary {
+  font-weight: bold;
+}
+
+#top-header span.secondary {
+}
+
+
+#left-panel {
+  position: absolute;
+  top: 36px;
+  left: 0px;
+  bottom: 0px;
+  width: 250px;
+  background-color: #f9f9f9;
+  border-right: 1px solid #cecece;
+  padding-top: 3px;
+}
+
+#left-panel .heading {
+  color: #666;
+  border-bottom: 1px solid #cecece;
+  margin-bottom: 5px;
+  font-weight: bold;
+  padding: 5px;
+}
+
+#left-panel .bug-lists {
+}
+
+#left-panel .bug-lists .bug-list-item {
+  padding: 5px;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  margin-bottom: 1px;
+}
+#left-panel .bug-lists .bug-list-item i {
+  line-height: 20px;
+  visibility: hidden;
+}
+#left-panel .bug-lists a {
+  text-decoration: none;
+}
+#left-panel .bug-lists .bug-list-item:hover {
+  cursor: pointer;
+  background-color: #eee;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+
+#left-panel .bug-lists .bug-list-item.active {
+  background-color: #3395d3;
+  border-top: 1px solid #2a71b6;
+  border-bottom: 1px solid #2a71b6;
+  color: white;
+}
+#left-panel .bug-lists .bug-list-item.active i {
+  visibility: visible;
+}
+
+#right-panel {
+  position: absolute;
+  top: 36px;
+  left: 251px;
+  bottom: 0px;
+  right: 0px;
+  padding: 15px;
+  overflow: scroll;
+}

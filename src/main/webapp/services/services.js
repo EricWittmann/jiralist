@@ -1,5 +1,13 @@
 'use strict';
 
+
+var formatEndpoint = function(endpoint, params) {
+    return endpoint.replace(/:(\w+)/g, function(match, key) {
+        return params[key] ? params[key] : (':' + key);
+    });
+};
+
+
 angular.module('myApp.services', ['ngResource'])
 
 .factory('BugListService', [ '$rootScope',
@@ -21,8 +29,7 @@ angular.module('myApp.services', ['ngResource'])
 				var list = {
 					id: id.toString(),
 					name: '<new list>',
-					jira: 'http://localhost:12345/rest/api/2',
-					jql: ''
+					jira: 'https://issues.jboss.org/rest/api/2'
 				};
 				allLists[id.toString()] = list;
 				localStorage['jira-list.next-id'] = nextId.toString();
@@ -52,19 +59,50 @@ angular.module('myApp.services', ['ngResource'])
 	}])
 
 
+.factory('JiraService', [
+    '$rootScope', 'BugListService', '$resource', '$timeout', '$interval',
+    function($rootScope, BugListService, $resource, $timeout, $interval) {
+        return {
+            listProjects: function(jira, username, password, handler, errorHandler) {
+                var endpoint = formatEndpoint(jira + '/project', {});
+                console.debug("Listing all projects: " + endpoint);
+                var enc = btoa(username + ':' + password);
+                $resource(endpoint, {}, {
+                    search: { method:'GET', isArray: true, headers: { 'Authorization' : 'Basic ' + enc } }
+                }).search(handler, errorHandler);
+            },
+            listVersions: function(jira, username, password, project, handler, errorHandler) {
+                var endpoint = formatEndpoint(jira + '/project/:key/versions', { key: project.key });
+                console.debug("Listing all versions: " + endpoint);
+                var enc = btoa(username + ':' + password);
+                $resource(endpoint, {}, {
+                    search: { method:'GET', isArray: true, headers: { 'Authorization' : 'Basic ' + enc } }
+                }).search(handler, errorHandler);
+            },
+            listIssueTypes: function(jira, username, password, project, handler, errorHandler) {
+                var endpoint = formatEndpoint(jira + '/issue/createmeta?projectKeys=:key', { key: project.key });
+                console.debug("Listing all issue types: " + endpoint);
+                var enc = btoa(username + ':' + password);
+                $resource(endpoint, {}, {
+                    search: { method:'GET', isArray: false, headers: { 'Authorization' : 'Basic ' + enc } }
+                }).search(function(result) {
+                    if (handler)
+                        handler(result.projects[0].issuetypes);
+                }, errorHandler);
+            }            
+        }
+    }])
+
+
 .factory('DataService', [ 
     '$rootScope', 'BugListService', '$resource', '$timeout', '$interval',
     function($rootScope, BugListService, $resource, $timeout, $interval) {
+        var idCounter = 100;
         var statuses = {
         };
         var dataCache = {
         };
         var lastUpdated = {
-        };
-        var formatEndpoint = function(endpoint, params) {
-            return endpoint.replace(/:(\w+)/g, function(match, key) {
-                return params[key] ? params[key] : (':' + key);
-            });
         };
         var toData = function(jiraResults) {
             var data = [];
@@ -73,6 +111,7 @@ angular.module('myApp.services', ['ngResource'])
                         key: jiraIssue.key,
                         url: jiraIssue.self,
                         summary: jiraIssue.fields.summary,
+                        description: jiraIssue.fields.description,
                         status: jiraIssue.fields.status.name
                     };
                 if (jiraIssue.fields.assignee) {
@@ -94,9 +133,13 @@ angular.module('myApp.services', ['ngResource'])
             if (status == 'refreshing') {
                 return;
             }
+            if (!list.project || !list.fixVersion) {
+                return;
+            }
             statuses[list.id] = 'refreshing';
+            var jql = 'project = ' + list.project.key + ' AND resolution = Unresolved AND fixVersion = ' + list.fixVersion.name + ' ORDER BY key DESC';
             var endpoint = formatEndpoint(list.jira + '/search?fields=summary,assignee,status&maxResults=500&jql=:jql', 
-                    { jql: encodeURIComponent(list.jql) });
+                    { jql: encodeURIComponent(jql) });
             console.debug("Refresh data endpoint: " + endpoint);
 
             var username = list.username;
@@ -159,6 +202,71 @@ angular.module('myApp.services', ['ngResource'])
                         setData(list, dataCache[list.id]);
                     });
                 }
+            },
+            newIssue: function(list, issue) {
+                var dataItem;
+                if (dataCache[list.id]) {
+                    console.log('Creating new issue from: ' + JSON.stringify(issue));
+                    var data = dataCache[list.id];
+                    dataItem = {
+                            id: idCounter++,
+                            key: '???',
+                            url: '',
+                            summary: issue.summary,
+                            description: issue.description,
+                            status: 'Open',
+                            assignee: 'TBD'
+                    };
+                    data.unshift(dataItem);
+                }
+                
+                var jiraIssue = {
+                    fields: {
+                        project: {
+                            id: list.project.id
+                        },
+                        summary: issue.summary,
+                        issuetype: {
+                            id: issue.type.id
+                        },
+                        fixVersions: [
+                          {
+                              id: list.fixVersion.id
+                          }
+                        ],
+                        description: issue.description
+                    }
+                };
+
+                var endpoint = list.jira + '/issue';
+                console.debug("Create Issue endpoint: " + endpoint);
+                console.debug('POSTing Issue: ' + JSON.stringify(jiraIssue));
+                var username = list.username;
+                var password = list.password;
+                var enc = btoa(username + ':' + password);
+                $resource(endpoint, {}, {
+                    create: { method:'POST', isArray: false, headers: { 'Authorization' : 'Basic ' + enc } }
+                }).create(jiraIssue, function(result) {
+                    if (dataItem) {
+                        dataItem.id = result.id;
+                        dataItem.key = result.key;
+                        dataItem.url = result.self;
+                    }
+                    console.info('Issue created successfully.');
+                    
+                    // Now fetch the new issue so we can extract some additional information from
+                    // it like the 'assignee', which is not returned when the issue is created.
+                    endpoint = list.jira + '/issue/' + result.key;
+                    $resource(endpoint, {}, {
+                        get: { method:'GET', isArray: false, headers: { 'Authorization' : 'Basic ' + enc } }
+                    }).get(function(result) {
+                        dataItem.assignee = result.fields.assignee.displayName;
+                        dataItem.avatar = result.fields.assignee.avatarUrls['16x16'];
+                    });
+                }, function(error) {
+                    alert('Failed to create issue "' + issue.summary + '":' + error);
+                    // TODO - remove the issue from the list
+                });
             },
             refreshData: function(list) {
                 refresh(list);

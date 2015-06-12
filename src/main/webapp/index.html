@@ -24,7 +24,7 @@
 
   <div id="top-header">
     <span class="primary">JIRA-List</span>
-    <span class="secondary">(making JIRA usable)</span>
+    <span class="secondary">Getting Things Done With JIRA</span>
   </div>
   
   <div id="content">
@@ -49,6 +49,47 @@
     </div>
 
     <div id="right-panel" ng-controller="BugListController" role="tabpanel" ng-show="activeList.id != -1">
+    
+        <!-- The New Issue modal dialog -->
+        <div class="modal fade" id="newIssueModal" tabindex="-1" role="dialog" aria-labelledby="newIssueModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                  <span class="pficon pficon-close"></span>
+                </button>
+                <h4 class="modal-title" id="newIssueModalLabel">Add New Issue</h4>
+              </div>
+              <div class="modal-body">
+                <form class="form-horizontal">
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" for="new-issue-summary">Summary</label>
+                    <div class="col-sm-9">
+                      <input ng-model="newIssue.summary" type="text" id="new-issue-summary" class="form-control">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" for="new-issue-description">Description</label>
+                    <div class="col-sm-9">
+                      <textarea ng-model="newIssue.description" id="new-issue-description" class="form-control" style="height: 100px"></textarea>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" for="new-issue-type">Type</label>
+                    <div class="col-sm-9">
+                      <select ng-model="newIssue.type" id="new-issue-type" class="form-control" ng-options="issueType.name for issueType in settings.issueTypes">
+                      </select>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button ng-disabled="!newIssue.summary || !newIssue.description" type="button" class="btn btn-primary" ng-click="createNewIssue(newIssue)" data-dismiss="modal">Create</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#issues" aria-controls="issues" role="tab" data-toggle="tab">Issues</a></li>
@@ -59,6 +100,7 @@
             <div role="tabpanel" class="tab-pane fade in active" id="issues">
                 <div style="margin-top: 15px">
                   <input class="filter" type="text" ng-model="issueFilter" placeholder="Filter issues..."></input>
+                  <button ng-show="settings.project && settings.fixVersion && settings.issueTypes" class="btn btn-primary pull-right" ng-click="openNewIssueDialog()">New Issue</button>
                 </div>
                 <div class="list-table">
                     <table class="datatable table table-striped table-bordered bug-list" style="margin-top: 5px">
@@ -112,9 +154,36 @@
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="col-sm-1 control-label" for="settings-jql">JQL:</label>
+                    <label class="col-sm-1 control-label" for="settings-project">Project:</label>
                     <div class="col-sm-8">
-                      <textarea id="settings-jql" class="form-control" ng-model="settings.jql"></textarea>
+                      <select id="settings-project" ng-options="project.key for project in projects | orderBy:'key'" ng-model="settings.project">
+                        <option value="">Select a project</option>
+                      </select>
+                      <button style="margin-top: -3px" id="refresh-projects" ng-click="refreshProjects()" class="btn btn-default" type="button"><i class="fa fa-refresh"></i></button>
+                    </div>
+                  </div>
+                  <div class="form-group" ng-show="settings.project">
+                    <label class="col-sm-1 control-label" for="fix-version">Fix Version:</label>
+                    <div class="col-sm-8">
+                      <select id="settings-project" ng-options="version.name for version in versions" ng-model="settings.fixVersion">
+                        <option value="">Select a version</option>
+                      </select>
+                      <button style="margin-top: -3px" id="refresh-fix-versions" ng-click="refreshVersions()" class="btn btn-default" type="button"><i class="fa fa-refresh"></i></button>
+                    </div>
+                  </div>
+                  <div class="form-group" ng-show="settings.project">
+                    <label class="col-sm-1 control-label" for="fix-version">Issue Types:</label>
+                    <div class="col-sm-8">
+                      <table style="float:left; min-width: 200px; border: 1px solid #bababa"> 
+                        <tr ng-repeat="issueType in settings.issueTypes">
+                          <td style="padding-left: 5px; padding-right: 5px">
+                           {{ issueType.name }}
+                          </td>
+                        </tr>
+                      </table>
+<!--                       <select style="float:left; min-width: 200px" multiple="multiple" id="issue-types" ng-options="issueType.name for issueType in settings.issueTypes"> -->
+<!--                       </select> -->
+                      <button style="margin-left: 5px; float: left;" id="refresh-issue-types" ng-click="refreshIssueTypes()" class="btn btn-default" type="button"><i class="fa fa-refresh"></i></button>
                     </div>
                   </div>
                 </form>
@@ -124,9 +193,14 @@
                 <button style="margin-left: 20px;" class="btn btn-danger" ng-click="deleteSettings()">Delete</button>
             </div>
         </div>
-
     </div>
-
   </div>
+  
+  <script type="text/javascript">
+    $('#newIssueModal').on('shown.bs.modal', function () {
+      $('#new-issue-summary').focus()
+    });
+  </script>
+  
 </body>
 </html>

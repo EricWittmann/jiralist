@@ -64,7 +64,7 @@ angular.module('myApp.services', ['ngResource'])
     function($rootScope, BugListService, $resource, $timeout, $interval) {
         return {
             listProjects: function(jira, username, password, handler, errorHandler) {
-                var endpoint = formatEndpoint(jira + '/project', {});
+                var endpoint = formatEndpoint('proxy/project', {});
                 console.debug("Listing all projects: " + endpoint);
                 var enc = btoa(username + ':' + password);
                 $resource(endpoint, {}, {
@@ -72,7 +72,7 @@ angular.module('myApp.services', ['ngResource'])
                 }).search(handler, errorHandler);
             },
             listVersions: function(jira, username, password, project, handler, errorHandler) {
-                var endpoint = formatEndpoint(jira + '/project/:key/versions', { key: project.key });
+                var endpoint = formatEndpoint('proxy/project/:key/versions', { key: project.key });
                 console.debug("Listing all versions: " + endpoint);
                 var enc = btoa(username + ':' + password);
                 $resource(endpoint, {}, {
@@ -80,7 +80,7 @@ angular.module('myApp.services', ['ngResource'])
                 }).search(handler, errorHandler);
             },
             listIssueTypes: function(jira, username, password, project, handler, errorHandler) {
-                var endpoint = formatEndpoint(jira + '/issue/createmeta?projectKeys=:key', { key: project.key });
+                var endpoint = formatEndpoint('proxy/issue/createmeta?projectKeys=:key', { key: project.key });
                 console.debug("Listing all issue types: " + endpoint);
                 var enc = btoa(username + ':' + password);
                 $resource(endpoint, {}, {
@@ -138,7 +138,7 @@ angular.module('myApp.services', ['ngResource'])
             }
             statuses[list.id] = 'refreshing';
             var jql = 'project = ' + list.project.key + ' AND resolution = Unresolved AND fixVersion = ' + list.fixVersion.name + ' ORDER BY key DESC';
-            var endpoint = formatEndpoint(list.jira + '/search?fields=summary,assignee,status&maxResults=500&jql=:jql', 
+            var endpoint = formatEndpoint('proxy/search?fields=summary,assignee,status&maxResults=500&jql=:jql', 
                     { jql: encodeURIComponent(jql) });
             console.debug("Refresh data endpoint: " + endpoint);
 
@@ -238,7 +238,7 @@ angular.module('myApp.services', ['ngResource'])
                     }
                 };
 
-                var endpoint = list.jira + '/issue';
+                var endpoint = 'proxy/issue';
                 console.debug("Create Issue endpoint: " + endpoint);
                 console.debug('POSTing Issue: ' + JSON.stringify(jiraIssue));
                 var username = list.username;
@@ -256,7 +256,7 @@ angular.module('myApp.services', ['ngResource'])
                     
                     // Now fetch the new issue so we can extract some additional information from
                     // it like the 'assignee', which is not returned when the issue is created.
-                    endpoint = list.jira + '/issue/' + result.key;
+                    endpoint = 'proxy/issue/' + result.key;
                     $resource(endpoint, {}, {
                         get: { method:'GET', isArray: false, headers: { 'Authorization' : 'Basic ' + enc } }
                     }).get(function(result) {
@@ -264,7 +264,7 @@ angular.module('myApp.services', ['ngResource'])
                         dataItem.avatar = result.fields.assignee.avatarUrls['16x16'];
                     });
                 }, function(error) {
-                    alert('Failed to create issue "' + issue.summary + '":' + error);
+                    alert('Failed to create issue "' + issue.summary + '":' + JSON.stringify(error));
                     // TODO - remove the issue from the list
                 });
             },

@@ -52,14 +52,20 @@ angular.module('myApp.controllers', ['myApp.services'])
             }
         });
         
-        $scope.$watch('settings', function() {
+        $scope.$watch('settings', function(newValue) {
             $scope.isDirty = !angular.equals($scope.settings, $scope.originalSettings)
+            var valid = false;
+            if (newValue) {
+                valid = newValue.name && newValue.project && newValue.fixVersion && newValue.issueTypes;
+            }
+            $scope.isValid = valid;
         }, true);
         
         $scope.refreshProjects = function() {
             $('#refresh-projects').prop('disabled', true);
             $('#refresh-projects i').addClass('fa-spin');
             JiraService.listProjects($scope.settings.jira, $scope.settings.username, $scope.settings.password, function(results) {
+                console.log('Projects refreshed: ' + JSON.stringify(results));
                 $scope.projects = results;
                 $('#refresh-projects').prop('disabled', false);
                 $('#refresh-projects i').removeClass('fa-spin');
@@ -67,7 +73,7 @@ angular.module('myApp.controllers', ['myApp.services'])
                 $scope.projects = [];
                 $('#refresh-projects').prop('disabled', false);
                 $('#refresh-projects i').removeClass('fa-spin');
-                alert(error);
+                alert("Error refreshing projects: " + JSON.stringify(error));
             });
         };
 
@@ -90,7 +96,7 @@ angular.module('myApp.controllers', ['myApp.services'])
                 $scope.versions = [];
                 $('#refresh-fix-versions').prop('disabled', false);
                 $('#refresh-fix-versions i').removeClass('fa-spin');
-                alert(error);
+                alert("Error refreshing versions: " + JSON.stringify(error));
             });
         };
 
@@ -114,10 +120,15 @@ angular.module('myApp.controllers', ['myApp.services'])
                 $scope.issueTypes = [];
                 $('#refresh-issue-types').prop('disabled', false);
                 $('#refresh-issue-types i').removeClass('fa-spin');
-                alert(error);
+                alert("Error refreshing issue types: " + JSON.stringify(error));
             });
         };
         
+        $scope.refreshBoth = function() {
+            $scope.refreshVersions();
+            $scope.refreshIssueTypes();
+        };
+
         $scope.openNewIssueDialog = function() {
             $scope.newIssue = {
                 type: $scope.settings.issueTypes[0]

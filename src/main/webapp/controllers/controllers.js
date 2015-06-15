@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('myApp.controllers', ['myApp.services'])
+angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
 
 .controller('LeftPanelController', [
     '$scope', '$rootScope', 'BugListService', 
@@ -47,7 +47,9 @@ angular.module('myApp.controllers', ['myApp.services'])
             if ($scope.settings.project) {
                 $scope.projects = [ $scope.settings.project ];
             }
-            if ($scope.settings.fixVersion) {
+            if ($scope.settings.versions) {
+                $scope.versions = $scope.settings.versions;
+            } else if ($scope.settings.fixVersion) {
                 $scope.versions = [ $scope.settings.fixVersion ];
             }
         });
@@ -84,12 +86,18 @@ angular.module('myApp.controllers', ['myApp.services'])
                     $scope.settings.project, function(results) 
             {
                 var filteredVersions = [];
+                var finalVersions = [];
                 angular.forEach(results, function(version) {
-                    if (!version.released) {
+                    if (!version.released && version.name.endsWith('.x')) {
                         filteredVersions.push(version);
+                    }
+                    if (version.name.endsWith('.Final')) {
+                        finalVersions.push(version);
                     }
                 });
                 $scope.versions = filteredVersions;
+                finalVersions.reverse();
+                $scope.settings.finalVersions = finalVersions;
                 $('#refresh-fix-versions').prop('disabled', false);
                 $('#refresh-fix-versions i').removeClass('fa-spin');
             }, function(error) {
@@ -157,6 +165,57 @@ angular.module('myApp.controllers', ['myApp.services'])
             $rootScope.activeList = {
                 id: '-1'
             }
+        };
+        
+        $scope.openMarkAsDoneDialog = function(issue) {
+            console.log('Showing Mark As Done dialog for: "'+issue.summary+'".');
+            $scope.madData = {
+                issue: issue,
+                fixedIn: $scope.activeList.finalVersions[0]
+            };
+            $('#markAsDoneModal').modal();
+        };
+        
+        $scope.markAsDone = function(madData) {
+            console.log('Attempting to mark issue "'+madData.issue.summary+'" as done.');
+            // Remove item from list
+            var index;
+            var found = false;
+            var list = $scope.activeList;
+            console.log('Finding issue with key: ' + madData.issue.key);
+            angular.forEach($scope.data, function(dissue, i) {
+                if (dissue.key == madData.issue.key) {
+                    index = i;
+                    found = true;
+                }
+            });
+            if (found) {
+                console.log('Data item (issue) at index ' + index + ' will be removed.');
+                $scope.data.splice(index, 1);
+            } else {
+                console.log('Issue not found in data: ' + madData.issue.summary);
+            }
+            
+            // Fetch transitions from JIRA
+            JiraService.listTransitions($scope.settings.jira, $scope.settings.username, $scope.settings.password, madData.issue.key, function(results) {
+                // Select the "Resolve" transition
+                var resolveTransition;
+                angular.forEach(results, function(transition) {
+                    if (transition.name == 'Resolve Issue') {
+                        resolveTransition = transition;
+                    }
+                });
+                if (resolveTransition) {
+                    // Perform the "Resolve" transition
+                    console.log('Resolving issue using transition: ' + JSON.stringify(resolveTransition));
+                    DataService.resolve(list, madData, resolveTransition);
+                } else {
+                    console.log('Failed to find transition.');
+                }
+                
+            }, function(error) {
+                alert('Failed to list transitions for issue: ' + JSON.stringify(error));
+            });
         };
     }])
 

@@ -8,7 +8,7 @@ var formatEndpoint = function(endpoint, params) {
 };
 
 
-angular.module('myApp.services', ['ngResource'])
+angular.module('myApp.services', ['ngResource', 'ngAnimate'])
 
 .factory('BugListService', [ '$rootScope',
 	function($rootScope) {
@@ -86,10 +86,23 @@ angular.module('myApp.services', ['ngResource'])
                 $resource(endpoint, {}, {
                     search: { method:'GET', isArray: false, headers: { 'Authorization' : 'Basic ' + enc } }
                 }).search(function(result) {
-                    if (handler)
+                    if (handler) {
                         handler(result.projects[0].issuetypes);
+                    }
                 }, errorHandler);
-            }            
+            },
+            listTransitions: function(jira, username, password, issueKey, handler, errorHandler) {
+                var endpoint = formatEndpoint('proxy/issue/:issueKey/transitions', { issueKey: issueKey });
+                console.debug("Listing issue transitions: " + endpoint);
+                var enc = btoa(username + ':' + password);
+                $resource(endpoint, {}, {
+                    search: { method:'GET', isArray: false, headers: { 'Authorization' : 'Basic ' + enc } }
+                }).search(function(result) {
+                    if (handler) {
+                        handler(result.transitions);
+                    }
+                }, errorHandler);
+            },
         }
     }])
 
@@ -202,6 +215,53 @@ angular.module('myApp.services', ['ngResource'])
                         setData(list, dataCache[list.id]);
                     });
                 }
+            },
+            resolve: function(list, madData, transition) {
+                console.debug("MAD data: " + JSON.stringify(madData));
+                var username = list.username;
+                var password = list.password;
+                var enc = btoa(username + ':' + password);
+                var updateReq = {
+                    update: {
+                        fixVersions: [
+                            {
+                                add: madData.fixedIn
+                            }
+                        ]
+                    },
+                    fields: {
+                        customfield_12310220: madData.pr
+                    }
+                };
+                var transitionReq = {
+                    transition: {
+                        id: transition.id
+                    }
+                };
+
+                // Update the issue with the fix version and git PR/commit link
+                var updateEndpoint = formatEndpoint('proxy/issue/:issueKey', { issueKey: madData.issue.key });
+                console.debug("Issuing the transition @ updateEndpoint: " + updateEndpoint);
+                $resource(updateEndpoint, {}, {
+                    put: { method:'PUT', headers: { 'Authorization' : 'Basic ' + enc } }
+                }).put(updateReq, function(result) {
+                    // OK it's done!
+                }, function(error) {
+                    // TODO: Handle the error appropriately - probably by restoring the 
+                    alert('Error marking issue resolved: ' + JSON.stringify(error));
+                });
+
+                // Transition to "Resolved"
+                var transitionEndpoint = formatEndpoint('proxy/issue/:issueKey/transitions', { issueKey: madData.issue.key });
+                console.debug("Issuing the transition @ transitionEndpoint: " + transitionEndpoint);
+                $resource(transitionEndpoint, {}, {
+                    post: { method:'POST', headers: { 'Authorization' : 'Basic ' + enc } }
+                }).post(transitionReq, function(result) {
+                    // OK it's done!
+                }, function(error) {
+                    // TODO: Handle the error appropriately - probably by restoring the 
+                    alert('Error marking issue resolved: ' + JSON.stringify(error));
+                });
             },
             newIssue: function(list, issue) {
                 var dataItem;

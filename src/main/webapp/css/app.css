@@ -91,3 +91,11 @@ input.filter {
   padding: 15px;
   overflow: scroll;
 }
+
+.issue-row.ng-leave {
+  transition:1.0s linear all;
+  opacity:1;
+}
+.issue-row.ng-leave.ng-leave-active {
+  opacity:0;
+}

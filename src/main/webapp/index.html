@@ -12,6 +12,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-route.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-resource.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-animate.min.js"></script>
   <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
   <script src="js/patternfly.min.js"></script>
@@ -91,6 +92,43 @@
           </div>
         </div>
 
+
+        <!-- The "Mark as Done" modal dialog -->
+        <div class="modal fade" id="markAsDoneModal" tabindex="-1" role="dialog" aria-labelledby="markAsDoneModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                  <span class="pficon pficon-close"></span>
+                </button>
+                <h4 class="modal-title" id="markAsDoneModalLabel">Mark Issue as Done</h4>
+              </div>
+              <div class="modal-body">
+                <form class="form-horizontal">
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" for="mark-as-done-fixed-in">Fixed In</label>
+                    <div class="col-sm-9">
+                      <select ng-model="madData.fixedIn" id="mark-as-done-fixed-in" class="form-control" ng-options="version.name for version in settings.finalVersions track by version.id">
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label" for="mark-as-done-pr">Pull Request</label>
+                    <div class="col-sm-9">
+                      <textarea ng-model="madData.pr" id="mark-as-done-pr" class="form-control" style="height: 75px"></textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button ng-disabled="!madData.pr || !madData.fixedIn" type="button" class="btn btn-primary" ng-click="markAsDone(madData)" data-dismiss="modal">Mark as Done</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#issues" aria-controls="issues" role="tab" data-toggle="tab">Issues</a></li>
             <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>
@@ -114,12 +152,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="issue in data | filter:issueFilter track by issue.key">
+                            <tr ng-repeat="issue in data | filter:issueFilter track by issue.key" class="issue-row">
                                 <td><a target="_blank" href="https://issues.jboss.org/browse/{{ issue.key }}">{{ issue.key }}</a></td>
                                 <td>{{ issue.summary }}</td>
                                 <td>{{ issue.status }}</td>
                                 <td>{{ issue.assignee }}</td>
-                                <td></td>
+                                <td><button ng-visible="issue.status = 'Open'" ng-click="openMarkAsDoneDialog(issue)" class="btn btn-default btn-xs" type="button"><i class="fa fa-check"></i></button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -163,7 +201,7 @@
                     </div>
                   </div>
                   <div class="form-group" ng-show="settings.project">
-                    <label class="col-sm-1 control-label" for="fix-version">Fix Version:</label>
+                    <label class="col-sm-1 control-label" for="fix-version">Version:</label>
                     <div class="col-sm-8">
                       <select id="settings-project" ng-options="version.name for version in versions" ng-model="settings.fixVersion">
                         <option value="">Select a version</option>

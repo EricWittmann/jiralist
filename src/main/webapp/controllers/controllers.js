@@ -91,7 +91,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
                     if (!version.released) {
                         filteredVersions.push(version);
                     }
-                    if (version.name.endsWith('.Final')) {
+                    if (version.name.endsWith('.Final') || version.name.search(/Beta\d*$/i) > -1 || version.name.search(/Alpha\d*$/i) > -1) {
                         finalVersions.push(version);
                     }
                 });

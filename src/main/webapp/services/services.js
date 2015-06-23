@@ -219,6 +219,27 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                     });
                 }
             },
+            startOrStop: function(list, issue, transition) {
+                var username = list.username;
+                var password = list.password;
+                var enc = btoa(username + ':' + password);
+                var transitionReq = {
+                    transition: {
+                        id: transition.id
+                    }
+                };
+
+                // Transition to "In Progress"
+                var transitionEndpoint = formatEndpoint('proxy/issue/:issueKey/transitions', { issueKey: issue.key });
+                console.debug("Issuing the 'start' transition @ transitionEndpoint: " + transitionEndpoint);
+                $resource(transitionEndpoint, {}, {
+                    post: { method:'POST', headers: { 'Authorization' : 'Basic ' + enc } }
+                }).post(transitionReq, function(result) {
+                    // OK it's done!
+                }, function(error) {
+                    alert('Error starting progress on issue: ' + JSON.stringify(error));
+                });
+            },
             assign: function(list, issue, who) {
                 var username = list.username;
                 var password = list.password;

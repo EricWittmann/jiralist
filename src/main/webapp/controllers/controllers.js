@@ -179,6 +179,54 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             var me = $scope.activeList.username;
             DataService.assign($scope.activeList, issue, me);
         };
+        $scope.startProgress = function(issue) {
+            issue.status = 'Coding in Progress';
+            var list = $scope.activeList;
+            // Fetch transitions from JIRA
+            JiraService.listTransitions($scope.settings.jira, $scope.settings.username, $scope.settings.password, issue.key, function(results) {
+                // Select the "Start Progress" transition
+                var startTransition;
+                angular.forEach(results, function(transition) {
+                    if (transition.name == 'Start Progress') {
+                        startTransition = transition;
+                    }
+                });
+                if (startTransition) {
+                    // Perform the "Resolve" transition
+                    console.log('Starting Progress on issue using transition: ' + JSON.stringify(startTransition));
+                    DataService.startOrStop(list, issue, startTransition);
+                } else {
+                    console.log('Failed to find transition.');
+                }
+                
+            }, function(error) {
+                alert('Failed to list transitions for issue: ' + JSON.stringify(error));
+            });
+        };
+        $scope.stopProgress = function(issue) {
+            issue.status = 'Open';
+            var list = $scope.activeList;
+            // Fetch transitions from JIRA
+            JiraService.listTransitions($scope.settings.jira, $scope.settings.username, $scope.settings.password, issue.key, function(results) {
+                // Select the "Start Progress" transition
+                var stopTransition;
+                angular.forEach(results, function(transition) {
+                    if (transition.name == 'Stop Progress') {
+                        stopTransition = transition;
+                    }
+                });
+                if (stopTransition) {
+                    // Perform the "Resolve" transition
+                    console.log('Stopping Progress on issue using transition: ' + JSON.stringify(stopTransition));
+                    DataService.startOrStop(list, issue, stopTransition);
+                } else {
+                    console.log('Failed to find transition.');
+                }
+                
+            }, function(error) {
+                alert('Failed to list transitions for issue: ' + JSON.stringify(error));
+            });
+        };
         
         $scope.markAsDone = function(madData) {
             console.log('Attempting to mark issue "'+madData.issue.summary+'" as done.');

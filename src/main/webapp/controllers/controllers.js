@@ -88,7 +88,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
                 var filteredVersions = [];
                 var finalVersions = [];
                 angular.forEach(results, function(version) {
-                    if (!version.released && version.name.endsWith('.x')) {
+                    if (!version.released) {
                         filteredVersions.push(version);
                     }
                     if (version.name.endsWith('.Final')) {

@@ -125,10 +125,13 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                         url: jiraIssue.self,
                         summary: jiraIssue.fields.summary,
                         description: jiraIssue.fields.description,
-                        status: jiraIssue.fields.status.name
+                        status: jiraIssue.fields.status.name,
+                        type: jiraIssue.fields.issuetype.name,
+                        icon: jiraIssue.fields.issuetype.iconUrl
                     };
                 if (jiraIssue.fields.assignee) {
                     issue.assignee = jiraIssue.fields.assignee.displayName;
+                    issue.assigneeId = jiraIssue.fields.assignee.name;
                     issue.avatar = jiraIssue.fields.assignee.avatarUrls['16x16'];
                 }
                 data.push(issue);
@@ -151,7 +154,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
             }
             statuses[list.id] = 'refreshing';
             var jql = 'project = ' + list.project.key + ' AND resolution = Unresolved AND fixVersion = ' + list.fixVersion.name + ' ORDER BY key DESC';
-            var endpoint = formatEndpoint('proxy/search?fields=summary,assignee,status&maxResults=500&jql=:jql', 
+            var endpoint = formatEndpoint('proxy/search?fields=summary,assignee,issuetype,status&maxResults=500&jql=:jql', 
                     { jql: encodeURIComponent(jql) });
             console.debug("Refresh data endpoint: " + endpoint);
 
@@ -216,8 +219,43 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                     });
                 }
             },
+            assign: function(list, issue, who) {
+                var username = list.username;
+                var password = list.password;
+                var enc = btoa(username + ':' + password);
+                
+                var assignReq = {
+                    name: who
+                };
+                
+                issue.assignee = who;
+                issue.assigneeId = who;
+                issue.avatar = '';
+
+                // Assign the issue to the new user
+                var assignEndpoint = formatEndpoint('proxy/issue/:issueKey/assignee', { issueKey: issue.key });
+                console.debug("Assigning the issue via endpoint: " + assignEndpoint);
+                $resource(assignEndpoint, {}, {
+                    put: { method:'PUT', headers: { 'Authorization' : 'Basic ' + enc } }
+                }).put(assignReq, function(result) {
+                    // OK it's done!
+                    
+                    // Now fetch the new issue so we can extract some additional information from
+                    // it like the 'assignee', which is not returned when the issue is created.
+                    var fetchEndpoint = formatEndpoint('proxy/issue/:issueKey', { issueKey: issue.key });
+                    $resource(fetchEndpoint, {}, {
+                        get: { method:'GET', isArray: false, headers: { 'Authorization' : 'Basic ' + enc } }
+                    }).get(function(result) {
+                        issue.assignee = result.fields.assignee.displayName;
+                        issue.assigneeId = result.fields.assignee.name;
+                        issue.avatar = result.fields.assignee.avatarUrls['16x16'];
+                    });
+                }, function(error) {
+                    // TODO: Handle the error appropriately - probably by restoring the 
+                    alert('Error assigning issue to user: ' + JSON.stringify(error));
+                });
+            },
             resolve: function(list, madData, transition) {
-                console.debug("MAD data: " + JSON.stringify(madData));
                 var username = list.username;
                 var password = list.password;
                 var enc = btoa(username + ':' + password);
@@ -321,6 +359,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                         get: { method:'GET', isArray: false, headers: { 'Authorization' : 'Basic ' + enc } }
                     }).get(function(result) {
                         dataItem.assignee = result.fields.assignee.displayName;
+                        dataItem.assigneeId = result.fields.assignee.name;
                         dataItem.avatar = result.fields.assignee.avatarUrls['16x16'];
                     });
                 }, function(error) {

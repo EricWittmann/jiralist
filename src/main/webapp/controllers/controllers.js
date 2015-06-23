@@ -175,6 +175,10 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             };
             $('#markAsDoneModal').modal();
         };
+        $scope.assignToMe = function(issue) {
+            var me = $scope.activeList.username;
+            DataService.assign($scope.activeList, issue, me);
+        };
         
         $scope.markAsDone = function(madData) {
             console.log('Attempting to mark issue "'+madData.issue.summary+'" as done.');

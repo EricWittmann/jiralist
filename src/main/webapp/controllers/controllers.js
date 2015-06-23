@@ -180,7 +180,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             DataService.assign($scope.activeList, issue, me);
         };
         $scope.startProgress = function(issue) {
-            issue.status = 'Coding in Progress';
+            issue.status = 'Coding In Progress';
             var list = $scope.activeList;
             // Fetch transitions from JIRA
             JiraService.listTransitions($scope.settings.jira, $scope.settings.username, $scope.settings.password, issue.key, function(results) {

@@ -270,6 +270,8 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                         issue.assignee = result.fields.assignee.displayName;
                         issue.assigneeId = result.fields.assignee.name;
                         issue.avatar = result.fields.assignee.avatarUrls['16x16'];
+                        issue.type = result.fields.issuetype.name;
+                        issue.icon = result.fields.issuetype.iconUrl;
                     });
                 }, function(error) {
                     // TODO: Handle the error appropriately - probably by restoring the 

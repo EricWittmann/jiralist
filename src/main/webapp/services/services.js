@@ -86,8 +86,11 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                 $resource(endpoint, {}, {
                     search: { method:'GET', isArray: false, headers: { 'Authorization' : 'Basic ' + enc } }
                 }).search(function(result) {
-                    if (handler) {
+                    console.debug("Issue types: " + JSON.stringify(result));
+                    if (handler && result.projects[0] && result.projects[0].issuetypes) {
                         handler(result.projects[0].issuetypes);
+                    } else {
+                        handler(null);
                     }
                 }, errorHandler);
             },
@@ -144,7 +147,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
             }
         };
         var refresh = function(list) {
-            console.debug("Refreshing data for list: " + list.id);
+            console.debug("Refreshing data for list: " + list.name);
             var status = statuses[list.id];
             if (status == 'refreshing') {
                 return;
@@ -207,13 +210,13 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                     return;
                 }
                 if (!dataCache[list.id]) {
-                    console.log('Could not find data in cache for: ' + list.id);
+                    console.log('Could not find data in cache for: ' + list.name);
                     $timeout(function() {
                         setData(list, []);
                         refresh(list);
                     });
                 } else {
-                    console.log('Found cached data for: ' + list.id);
+                    console.log('Found cached data for: ' + list.name);
                     $timeout(function() {
                         setData(list, dataCache[list.id]);
                     });

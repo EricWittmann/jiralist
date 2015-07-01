@@ -156,6 +156,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                 return;
             }
             statuses[list.id] = 'refreshing';
+            $rootScope.refreshing = true;
             var jql = 'project = ' + list.project.key + ' AND resolution = Unresolved AND fixVersion = ' + list.fixVersion.name + ' ORDER BY key DESC';
             var endpoint = formatEndpoint('proxy/search?fields=summary,assignee,issuetype,status&maxResults=500&jql=:jql', 
                     { jql: encodeURIComponent(jql) });
@@ -168,6 +169,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
             $resource(endpoint, {}, {
                 search: { method:'GET', headers: { 'Authorization' : 'Basic ' + enc } }
             }).search(function(results) {
+                $rootScope.refreshing = false;
                 statuses[list.id] = 'ok';
                 var data = toData(results);
                 dataCache[list.id] = data;
@@ -175,12 +177,13 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                 setData(list, data);
                 console.info('OK');
             }, function(error) {
+                $rootScope.refreshing = false;
                 statuses[list.id] = 'error';
                 console.error(error);
             });
         };
         
-        var fiveMinutes = 60000*5;
+        var thirtySeconds = 30000;
         $interval(function() {
             console.debug("!!! heartbeat !!!");
             var allLists = BugListService.getLists();
@@ -191,7 +194,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                     listToRefresh = list;
                     console.debug('** List never refreshed: ' + list.name);
                 } else {
-                    var ttl = lastUpdated[list.id] + fiveMinutes;
+                    var ttl = lastUpdated[list.id] + thirtySeconds;
                     if (now > ttl) {
                         listToRefresh = list;
                         console.debug('** List needs refresh (ttl): ' + list.name);

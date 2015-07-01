@@ -138,6 +138,7 @@
             <div role="tabpanel" class="tab-pane fade in active" id="issues">
                 <div style="margin-top: 15px">
                   <input class="filter" type="text" ng-model="issueFilter" placeholder="Filter issues..."></input>
+                  <button id="refresh-list" ng-disabled="refreshing" class="btn btn-default pull-right" ng-click="refreshList()">Refresh List</button>
                   <button ng-show="settings.project && settings.fixVersion && settings.issueTypes" class="btn btn-primary pull-right" ng-click="openNewIssueDialog()">New Issue</button>
                 </div>
                 <div class="list-table">

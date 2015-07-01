@@ -99,3 +99,7 @@ input.filter {
 .issue-row.ng-leave.ng-leave-active {
   opacity:0;
 }
+
+#refresh-list {
+  margin-left: 10px;
+}

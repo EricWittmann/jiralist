@@ -137,6 +137,9 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             $scope.refreshIssueTypes();
         };
 
+        $scope.refreshList = function() {
+            DataService.refreshData($scope.activeList);
+        };
         $scope.openNewIssueDialog = function() {
             $scope.newIssue = {
                 type: $scope.settings.issueTypes[0]

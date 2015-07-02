@@ -157,7 +157,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
             }
             statuses[list.id] = 'refreshing';
             $rootScope.refreshing = true;
-            var jql = 'project = ' + list.project.key + ' AND resolution = Unresolved AND fixVersion = ' + list.fixVersion.name + ' ORDER BY key DESC';
+            var jql = 'project = ' + list.project.key + ' AND resolution = Unresolved AND fixVersion = "' + list.fixVersion.name + '" ORDER BY key DESC';
             var endpoint = formatEndpoint('proxy/search?fields=summary,assignee,issuetype,status&maxResults=500&jql=:jql', 
                     { jql: encodeURIComponent(jql) });
             console.debug("Refresh data endpoint: " + endpoint);

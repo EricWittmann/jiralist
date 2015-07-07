@@ -326,7 +326,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                 }).post(transitionReq, function(result) {
                     // OK it's done!
                 }, function(error) {
-                    // TODO: Handle the error appropriately - probably by restoring the 
+                    // TODO: Handle the error appropriately - probably by restoring the issue to the list
                     alert('Error marking issue resolved: ' + JSON.stringify(error));
                 });
             },
@@ -342,7 +342,9 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                             summary: issue.summary,
                             description: issue.description,
                             status: 'Open',
-                            assignee: 'TBD'
+                            type: issue.type.name,
+                            icon: issue.type.iconUrl,
+                            assignee: list.username
                     };
                     data.unshift(dataItem);
                 }
@@ -351,6 +353,9 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                     fields: {
                         project: {
                             id: list.project.id
+                        },
+                        assignee: {
+                            name: list.username
                         },
                         summary: issue.summary,
                         issuetype: {

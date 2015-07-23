@@ -183,7 +183,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
             });
         };
         
-        var thirtySeconds = 30000;
+        var fiveMinutes = 60000 * 5;
         $interval(function() {
             console.debug("!!! heartbeat !!!");
             var allLists = BugListService.getLists();
@@ -194,7 +194,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                     listToRefresh = list;
                     console.debug('** List never refreshed: ' + list.name);
                 } else {
-                    var ttl = lastUpdated[list.id] + thirtySeconds;
+                    var ttl = lastUpdated[list.id] + fiveMinutes;
                     if (now > ttl) {
                         listToRefresh = list;
                         console.debug('** List needs refresh (ttl): ' + list.name);

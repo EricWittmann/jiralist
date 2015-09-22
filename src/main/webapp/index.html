@@ -138,6 +138,8 @@
             <div role="tabpanel" class="tab-pane fade in active" id="issues">
                 <div style="margin-top: 15px">
                   <input class="filter" type="text" ng-model="issueFilter" placeholder="Filter issues..."></input>
+                  <input style="margin-left: 8px" id="my-stuff" class="" type="checkbox" ng-model="myStuffOnly"></input>
+                  <label for="my-stuff">Show Only My Stuff</label>
                   <button id="refresh-list" ng-disabled="refreshing" class="btn btn-default pull-right" ng-click="refreshList()">Refresh List</button>
                   <button ng-show="settings.project && settings.fixVersion && settings.issueTypes" class="btn btn-primary pull-right" ng-click="openNewIssueDialog()">New Issue</button>
                 </div>
@@ -153,7 +155,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="issue in data | filter:issueFilter track by issue.key" class="issue-row">
+                            <tr ng-repeat="issue in data | filter:issueFilter | filter:{assigneeId: assigneeIdFilter} track by issue.key" class="issue-row">
                                 <td nowrap="nowrap">
                                   <img title="{{ issue.type }}" src="{{ issue.icon }}"></img>
                                   <a target="_blank" href="https://issues.jboss.org/browse/{{ issue.key }}">{{ issue.key }}</a>

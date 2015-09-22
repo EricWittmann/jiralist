@@ -54,6 +54,15 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             }
         });
         
+        $scope.$watch('myStuffOnly', function(newValue) {
+            if (newValue) {
+                $scope.assigneeIdFilter = $rootScope.activeList.username;
+            } else {
+                delete $scope.assigneeIdFilter;
+            }
+            console.log('$scope.assigneeFilter == ' + $scope.assigneeFilter);
+        });
+        
         $scope.$watch('settings', function(newValue) {
             $scope.isDirty = !angular.equals($scope.settings, $scope.originalSettings)
             var valid = false;

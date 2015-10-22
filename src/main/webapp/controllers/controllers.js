@@ -36,6 +36,15 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
     '$scope', '$rootScope', 'BugListService', 'DataService', 'JiraService',
     function($scope, $rootScope, BugListService, DataService, JiraService) {
         console.log('Running the bug list controller.');
+        
+        $scope.predicate = 'key';
+        $scope.reverse = true;
+        
+        $scope.order = function(predicate) {
+          $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;
+          $scope.predicate = predicate;
+        };
+        
         $rootScope.$watch('activeList', function(newValue) {
             if (!newValue || newValue.id == '-1') {
                 return;
@@ -71,7 +80,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             }
             $scope.isValid = valid;
         }, true);
-
+        
         $scope.refreshProjects = function() {
             $('#refresh-projects').prop('disabled', true);
             $('#refresh-projects i').addClass('fa-spin');

@@ -3,7 +3,7 @@
 angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
 
 .controller('LeftPanelController', [
-    '$scope', '$rootScope', 'BugListService', 
+    '$scope', '$rootScope', 'BugListService',
     function($scope, $rootScope, BugListService) {
         console.log('Running the left-hand panel controller.');
 
@@ -23,7 +23,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             console.info("Changing the active list: " + JSON.stringify(list));
             $rootScope.activeList = list;
         };
-        
+
         console.log("Getting all the lists.");
         $rootScope.lists = BugListService.getLists();
         $rootScope.activeList = {
@@ -53,7 +53,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
                 $scope.versions = [ $scope.settings.fixVersion ];
             }
         });
-        
+
         $scope.$watch('myStuffOnly', function(newValue) {
             if (newValue) {
                 $scope.assigneeIdFilter = $rootScope.activeList.username;
@@ -62,7 +62,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             }
             console.log('$scope.assigneeFilter == ' + $scope.assigneeFilter);
         });
-        
+
         $scope.$watch('settings', function(newValue) {
             $scope.isDirty = !angular.equals($scope.settings, $scope.originalSettings)
             var valid = false;
@@ -71,7 +71,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             }
             $scope.isValid = valid;
         }, true);
-        
+
         $scope.refreshProjects = function() {
             $('#refresh-projects').prop('disabled', true);
             $('#refresh-projects i').addClass('fa-spin');
@@ -91,8 +91,8 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
         $scope.refreshVersions = function() {
             $('#refresh-fix-versions').prop('disabled', true);
             $('#refresh-fix-versions i').addClass('fa-spin');
-            JiraService.listVersions($scope.settings.jira, $scope.settings.username, $scope.settings.password, 
-                    $scope.settings.project, function(results) 
+            JiraService.listVersions($scope.settings.jira, $scope.settings.username, $scope.settings.password,
+                    $scope.settings.project, function(results)
             {
                 var filteredVersions = [];
                 var finalVersions = [];
@@ -120,8 +120,8 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
         $scope.refreshIssueTypes = function() {
             $('#refresh-issue-types').prop('disabled', true);
             $('#refresh-issue-types i').addClass('fa-spin');
-            JiraService.listIssueTypes($scope.settings.jira, $scope.settings.username, $scope.settings.password, 
-                    $scope.settings.project, function(results) 
+            JiraService.listIssueTypes($scope.settings.jira, $scope.settings.username, $scope.settings.password,
+                    $scope.settings.project, function(results)
             {
                 var filteredIssueTypes = [];
                 angular.forEach(results, function(issueType) {
@@ -140,7 +140,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
                 alert("Error refreshing issue types: " + JSON.stringify(error));
             });
         };
-        
+
         $scope.refreshBoth = function() {
             $scope.refreshVersions();
             $scope.refreshIssueTypes();
@@ -159,7 +159,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             console.log('Creating new issue: ' + JSON.stringify(newIssue));
             DataService.newIssue($scope.activeList, newIssue);
         };
-        
+
         $scope.saveSettings = function() {
             BugListService.saveList($scope.settings);
             $rootScope.lists = BugListService.getLists();
@@ -178,7 +178,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
                 id: '-1'
             }
         };
-        
+
         $scope.openMarkAsDoneDialog = function(issue) {
             console.log('Showing Mark As Done dialog for: "'+issue.summary+'".');
             $scope.madData = {
@@ -210,7 +210,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
                 } else {
                     console.log('Failed to find transition.');
                 }
-                
+
             }, function(error) {
                 alert('Failed to list transitions for issue: ' + JSON.stringify(error));
             });
@@ -234,12 +234,12 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
                 } else {
                     console.log('Failed to find transition.');
                 }
-                
+
             }, function(error) {
                 alert('Failed to list transitions for issue: ' + JSON.stringify(error));
             });
         };
-        
+
         $scope.markAsDone = function(madData) {
             console.log('Attempting to mark issue "'+madData.issue.summary+'" as done.');
             // Remove item from list
@@ -259,7 +259,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             } else {
                 console.log('Issue not found in data: ' + madData.issue.summary);
             }
-            
+
             // Fetch transitions from JIRA
             JiraService.listTransitions($scope.settings.jira, $scope.settings.username, $scope.settings.password, madData.issue.key, function(results) {
                 // Select the "Resolve" transition
@@ -276,7 +276,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
                 } else {
                     console.log('Failed to find transition.');
                 }
-                
+
             }, function(error) {
                 alert('Failed to list transitions for issue: ' + JSON.stringify(error));
             });

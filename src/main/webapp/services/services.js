@@ -130,7 +130,8 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                         description: jiraIssue.fields.description,
                         status: jiraIssue.fields.status.name,
                         type: jiraIssue.fields.issuetype.name,
-                        icon: jiraIssue.fields.issuetype.iconUrl
+                        icon: jiraIssue.fields.issuetype.iconUrl,
+                        priority: jiraIssue.fields.priority
                     };
                 if (jiraIssue.fields.assignee) {
                     issue.assignee = jiraIssue.fields.assignee.displayName;
@@ -158,7 +159,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
             statuses[list.id] = 'refreshing';
             $rootScope.refreshing = true;
             var jql = 'project = ' + list.project.key + ' AND resolution = Unresolved AND fixVersion = "' + list.fixVersion.name + '" ORDER BY key DESC';
-            var endpoint = formatEndpoint('proxy/search?fields=summary,assignee,issuetype,status&maxResults=500&jql=:jql', 
+            var endpoint = formatEndpoint('proxy/search?fields=summary,assignee,issuetype,status,priority&maxResults=500&jql=:jql', 
                     { jql: encodeURIComponent(jql) });
             console.debug("Refresh data endpoint: " + endpoint);
 

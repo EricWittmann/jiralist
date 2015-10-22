@@ -4,6 +4,14 @@ select {
   padding: 3px;
 }
 
+table.bug-list {
+	margin-top: 5px;
+}
+
+table.bug-list thead {
+	cursor: pointer;
+}
+
 input.filter {
   border: 1px solid #D1D1D1;
   padding: 3px;

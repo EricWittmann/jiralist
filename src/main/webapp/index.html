@@ -147,16 +147,16 @@
                     <table class="datatable table table-striped table-bordered bug-list" style="margin-top: 5px">
                         <thead>
                             <tr>
-                                <th>Key</th>
-                                <th>Summary</th>
-                                <th>Status</th>
-                                <th>Priority</th>
-                                <th>Assignee</th>
+                                <th ng-click="order('key')">Key</th>
+                                <th ng-click="order('summary')">Summary</th>
+                                <th ng-click="order('status')">Status</th>
+                                <th ng-click="order('priority.id')">Priority</th>
+                                <th ng-click="order('assignee')">Assignee</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="issue in data | filter:issueFilter | filter:{assigneeId: assigneeIdFilter} track by issue.key" class="issue-row">
+                            <tr ng-repeat="issue in data | filter:issueFilter | orderBy:predicate:reverse | filter:{assigneeId: assigneeIdFilter} track by issue.key" class="issue-row">
                                 <td nowrap="nowrap">
                                   <img title="{{ issue.type }}" src="{{ issue.icon }}"></img>
                                   <a target="_blank" href="https://issues.jboss.org/browse/{{ issue.key }}">{{ issue.key }}</a>

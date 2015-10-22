@@ -150,6 +150,7 @@
                                 <th>Key</th>
                                 <th>Summary</th>
                                 <th>Status</th>
+                                <th>Priority</th>
                                 <th>Assignee</th>
                                 <th>Actions</th>
                             </tr>
@@ -164,6 +165,7 @@
                                   <span>{{ issue.summary }}</span>
                                 </td>
                                 <td nowrap="nowrap">{{ issue.status }}</td>
+                                <td><img title="{{ issue.priority.name }}" ng-src="{{ issue.priority.iconUrl }}"> {{ issue.priority.name }}</td>
                                 <td nowrap="nowrap">
                                   <img src="{{ issue.avatar }}"></img>
                                   <span>{{ issue.assignee }}</span>

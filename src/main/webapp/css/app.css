@@ -111,3 +111,16 @@ input.filter {
 #refresh-list {
   margin-left: 10px;
 }
+
+.priorityOverlay {
+  position: absolute;
+  padding: 0px;
+  left: -2px;
+  top: -2px;
+  right: -12px;
+  bottom: 0px;
+  border: 1px solid #B7B7B7;
+  text-align: right;
+  height: 25px;
+  padding-right: 1px;
+}

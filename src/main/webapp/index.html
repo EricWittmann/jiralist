@@ -171,22 +171,27 @@
                                 <td nowrap="nowrap"
                                     ng-mouseover="hoverIn()"
                                     ng-mouseleave="hoverOut()">
-                                    <div ng-hide="editorEnabled">
+                                    <div ng-hide="editorEnabled" style="position:relative">
                                         <img title="{{ issue.priority.name }}"
                                              ng-src="{{ issue.priority.iconUrl }}"> {{ issue.priority.name }}
-                                    <span ng-show="hoverEdit"
-                                          ng-click="editorEnabled=!editorEnabled"
-                                          class="fa fa-pencil"></span>
+                                        <div class="priorityOverlay" ng-show="hoverEdit">
+                                            <button title="Change the priority." 
+                                                    ng-click="editorEnabled=!editorEnabled" 
+                                                    class="btn btn-default btn-xs" 
+                                                    type="button"><i class="fa fa-pencil"></i></button>
+                                        </div>
                                     </div>
-                                    <div class="form-group"
-                                         ng-show="editorEnabled">
-                                        <div class="form-group">
+                                    <div ng-show="editorEnabled">
+                                        <div>
                                             <select id="edit-priority"
                                                     ng-options="priority as priority.name for priority in priorities | orderBy:'name'"
                                                     ng-model="selectedPriority"
                                                     ng-change="savePriority(issue, selectedPriority)">
                                                 <option value="">Select a priority</option>
                                             </select>
+                                            <button ng-click="editorEnabled=!editorEnabled" 
+                                                    class="btn btn-default btn-xs" 
+                                                    type="button"><i class="fa fa-close"></i></button>
                                         </div>
                                     </div>
                                 </td>

@@ -50,9 +50,11 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
 			},
 			getLists: function() {
 				var rval = [];
-				angular.forEach(allLists, function(value, key) {
+
+                angular.forEach(allLists, function(value, key) {
 					rval.push(value);
-				})
+				});
+
 				return rval;
 			}
 		}
@@ -63,6 +65,14 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
     '$rootScope', 'BugListService', '$resource', '$timeout', '$interval',
     function($rootScope, BugListService, $resource, $timeout, $interval) {
         return {
+            listPriorities: function(jira, username, password, handler, errorHandler) {
+                var endpoint = formatEndpoint('proxy/priority', {});
+                var enc = btoa(username + ':' + password);
+
+                $resource(endpoint, {}, {
+                    search: {method: 'GET', isArray: true, headers: { 'Authorization' : 'Basic ' + enc }}
+                }).search(handler, errorHandler);
+            },
             listProjects: function(jira, username, password, handler, errorHandler) {
                 var endpoint = formatEndpoint('proxy/project', {});
                 console.debug("Listing all projects: " + endpoint);
@@ -105,7 +115,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                         handler(result.transitions);
                     }
                 }, errorHandler);
-            },
+            }
         }
     }])
 
@@ -114,12 +124,16 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
     '$rootScope', 'BugListService', '$resource', '$timeout', '$interval',
     function($rootScope, BugListService, $resource, $timeout, $interval) {
         var idCounter = 100;
+
         var statuses = {
         };
+
         var dataCache = {
         };
+
         var lastUpdated = {
         };
+
         var toData = function(jiraResults) {
             var data = [];
             angular.forEach(jiraResults.issues, function(jiraIssue) {
@@ -133,13 +147,16 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                         icon: jiraIssue.fields.issuetype.iconUrl,
                         priority: jiraIssue.fields.priority
                     };
+
                 if (jiraIssue.fields.assignee) {
                     issue.assignee = jiraIssue.fields.assignee.displayName;
                     issue.assigneeId = jiraIssue.fields.assignee.name;
                     issue.avatar = jiraIssue.fields.assignee.avatarUrls['16x16'];
                 }
+
                 data.push(issue);
             });
+
             return data;
         };
         var setData = function(list, data) {
@@ -147,6 +164,7 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                 $rootScope.data = data;
             }
         };
+
         var refresh = function(list) {
             console.debug("Refreshing data for list: " + list.name);
             var status = statuses[list.id];
@@ -185,17 +203,20 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
         };
         
         var fiveMinutes = 60000 * 5;
+
         $interval(function() {
             console.debug("!!! heartbeat !!!");
             var allLists = BugListService.getLists();
             var listToRefresh = null;
             var now = Date.now();
+
             angular.forEach(allLists, function(list) {
                 if (!lastUpdated[list.id]) {
                     listToRefresh = list;
                     console.debug('** List never refreshed: ' + list.name);
                 } else {
                     var ttl = lastUpdated[list.id] + fiveMinutes;
+
                     if (now > ttl) {
                         listToRefresh = list;
                         console.debug('** List needs refresh (ttl): ' + list.name);
@@ -213,14 +234,17 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                     console.log('Aborting due to list.id == -1');
                     return;
                 }
+
                 if (!dataCache[list.id]) {
                     console.log('Could not find data in cache for: ' + list.name);
+
                     $timeout(function() {
                         setData(list, []);
                         refresh(list);
                     });
                 } else {
                     console.log('Found cached data for: ' + list.name);
+
                     $timeout(function() {
                         setData(list, dataCache[list.id]);
                     });
@@ -400,6 +424,16 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                 }, function(error) {
                     alert('Failed to create issue "' + issue.summary + '":' + JSON.stringify(error));
                     // TODO - remove the issue from the list
+                });
+            },
+            savePriority: function(list, issue, priority) {
+                var username = list.username;
+                var password = list.password;
+                var enc = btoa(username + ':' + password);
+                var priorityEndpoint = 'proxy/issue/' + issue.key;
+
+                return $resource(priorityEndpoint, {}, {
+                    put: { method:'PUT', headers: { 'Authorization' : 'Basic ' + enc } }
                 });
             },
             refreshData: function(list) {

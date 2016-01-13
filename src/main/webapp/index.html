@@ -135,6 +135,7 @@
         </ul>
         
         <div class="tab-content">
+            <!-- Issues Tab -->
             <div role="tabpanel" class="tab-pane fade in active" id="issues">
                 <div style="margin-top: 15px">
                   <input class="filter" type="text" ng-model="issueFilter" placeholder="Filter issues..."></input>
@@ -165,7 +166,30 @@
                                   <span>{{ issue.summary }}</span>
                                 </td>
                                 <td nowrap="nowrap">{{ issue.status }}</td>
-                                <td nowrap="nowrap"><img title="{{ issue.priority.name }}" ng-src="{{ issue.priority.iconUrl }}"> {{ issue.priority.name }}</td>
+
+                                <!-- Issue: Priority -->
+                                <td nowrap="nowrap"
+                                    ng-mouseover="hoverIn()"
+                                    ng-mouseleave="hoverOut()">
+                                    <div ng-hide="editorEnabled">
+                                        <img title="{{ issue.priority.name }}"
+                                             ng-src="{{ issue.priority.iconUrl }}"> {{ issue.priority.name }}
+                                    <span ng-show="hoverEdit"
+                                          ng-click="editorEnabled=!editorEnabled"
+                                          class="fa fa-pencil"></span>
+                                    </div>
+                                    <div class="form-group"
+                                         ng-show="editorEnabled">
+                                        <div class="form-group">
+                                            <select id="edit-priority"
+                                                    ng-options="priority as priority.name for priority in priorities | orderBy:'name'"
+                                                    ng-model="selectedPriority"
+                                                    ng-change="savePriority(issue, selectedPriority)">
+                                                <option value="">Select a priority</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td nowrap="nowrap">
                                   <img src="{{ issue.avatar }}"></img>
                                   <span>{{ issue.assignee }}</span>
@@ -181,6 +205,8 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Settings Tab -->
             <div role="tabpanel" class="tab-pane fade" id="settings">
                 <h1>List Settings</h1>
                 <hr />

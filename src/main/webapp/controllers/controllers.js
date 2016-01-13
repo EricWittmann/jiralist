@@ -9,58 +9,83 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
 
         $scope.newList = function() {
             console.info("Creating a new issue list.");
+
             var list = BugListService.createList();
+
             $rootScope.activeList = list;
             $rootScope.lists = BugListService.getLists();
+
             console.info("List created: " + JSON.stringify(list));
+
             $('#right-panel .nav-tabs a[href="#settings"]').tab('show')
             $('#settings-name').focus();
         };
+
         $scope.isActive = function(list) {
             return (list.id == $rootScope.activeList.id);
         };
+
         $scope.selectList = function(list) {
             console.info("Changing the active list: " + JSON.stringify(list));
+
             $rootScope.activeList = list;
         };
 
         console.log("Getting all the lists.");
+
         $rootScope.lists = BugListService.getLists();
         $rootScope.activeList = {
             id: '-1'
         };
-        console.log("Done: " + JSON.stringify($rootScope.lists));
+
+        //console.log("Done: " + JSON.stringify($rootScope.lists));
     }])
 
 .controller('BugListController', [
     '$scope', '$rootScope', 'BugListService', 'DataService', 'JiraService',
     function($scope, $rootScope, BugListService, DataService, JiraService) {
         console.log('Running the bug list controller.');
-        
+
         $scope.predicate = 'key';
         $scope.reverse = true;
+        $scope.selectedPriority = null;
         
         $scope.order = function(predicate) {
           $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;
           $scope.predicate = predicate;
+        };
+
+        // Show/Hide the Edit Icon for Priorities on Hover
+        $scope.hoverIn = function(){
+            this.hoverEdit = true;
+        };
+
+        $scope.hoverOut = function(){
+            this.hoverEdit = false;
         };
         
         $rootScope.$watch('activeList', function(newValue) {
             if (!newValue || newValue.id == '-1') {
                 return;
             }
+
             console.log("event: active list changed: " + JSON.stringify(newValue));
+
             $scope.settings = angular.copy(newValue);
             $scope.originalSettings = newValue;
             $rootScope.data = DataService.loadData(newValue);
+
             if ($scope.settings.project) {
                 $scope.projects = [ $scope.settings.project ];
             }
+
             if ($scope.settings.versions) {
                 $scope.versions = $scope.settings.versions;
             } else if ($scope.settings.fixVersion) {
                 $scope.versions = [ $scope.settings.fixVersion ];
             }
+
+            $scope.refreshPriorities();
         });
 
         $scope.$watch('myStuffOnly', function(newValue) {
@@ -69,15 +94,18 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             } else {
                 delete $scope.assigneeIdFilter;
             }
+
             console.log('$scope.assigneeFilter == ' + $scope.assigneeFilter);
         });
 
         $scope.$watch('settings', function(newValue) {
-            $scope.isDirty = !angular.equals($scope.settings, $scope.originalSettings)
+            $scope.isDirty = !angular.equals($scope.settings, $scope.originalSettings);
             var valid = false;
+
             if (newValue) {
                 valid = newValue.name && newValue.project && newValue.fixVersion && newValue.issueTypes;
             }
+
             $scope.isValid = valid;
         }, true);
         
@@ -86,6 +114,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             $('#refresh-projects i').addClass('fa-spin');
             JiraService.listProjects($scope.settings.jira, $scope.settings.username, $scope.settings.password, function(results) {
                 console.log('Projects refreshed: ' + JSON.stringify(results));
+
                 $scope.projects = results;
                 $('#refresh-projects').prop('disabled', false);
                 $('#refresh-projects i').removeClass('fa-spin');
@@ -97,6 +126,15 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             });
         };
 
+
+        $scope.refreshPriorities = function() {
+            JiraService.listPriorities($scope.settings.jira, $scope.settings.username, $scope.settings.password, function(results) {
+                $scope.priorities = results;
+            }, function(error) {
+                console.log('Error refreshing priorities: ' + JSON.stringify(error));
+            });
+        };
+
         $scope.refreshVersions = function() {
             $('#refresh-fix-versions').prop('disabled', true);
             $('#refresh-fix-versions i').addClass('fa-spin');
@@ -105,14 +143,17 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             {
                 var filteredVersions = [];
                 var finalVersions = [];
+
                 angular.forEach(results, function(version) {
                     if (!version.released) {
                         filteredVersions.push(version);
                     }
+
                     if (version.name.endsWith('.Final') || version.name.search(/Beta\d*$/i) > -1 || version.name.search(/Alpha\d*$/i) > -1) {
                         finalVersions.push(version);
                     }
                 });
+
                 $scope.versions = filteredVersions;
                 finalVersions.reverse();
                 $scope.settings.finalVersions = finalVersions;
@@ -151,6 +192,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
         };
 
         $scope.refreshBoth = function() {
+            $scope.refreshPriorities();
             $scope.refreshVersions();
             $scope.refreshIssueTypes();
         };
@@ -158,6 +200,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
         $scope.refreshList = function() {
             DataService.refreshData($scope.activeList);
         };
+
         $scope.openNewIssueDialog = function() {
             $scope.newIssue = {
                 type: $scope.settings.issueTypes[0]
@@ -174,12 +217,32 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             $rootScope.lists = BugListService.getLists();
             $rootScope.activeList = $scope.settings;
             $scope.originalSettings = angular.copy($scope.settings);
-            $scope.isDirty = !angular.equals($scope.settings, $scope.originalSettings)
+            $scope.isDirty = !angular.equals($scope.settings, $scope.originalSettings);
             DataService.refreshData($scope.settings);
         };
+
+        $scope.savePriority = function(issue, priority) {
+            var request = {
+                'fields': { 'priority': priority
+                }
+            };
+
+            var that = this;
+
+            DataService.savePriority($scope.activeList, issue, priority).put(request, function(result) {
+                issue.priority = result.fields.priority;
+                that.editorEnabled = false;
+
+            }, function(error) {
+                console.log('Error saving priority for issue: ' + JSON.stringify(error));
+                that.editorEnabled = false;
+            });
+        };
+
         $scope.cancelSettings = function() {
             $scope.settings = angular.copy($scope.originalSettings);
         };
+
         $scope.deleteSettings = function() {
             BugListService.deleteList($scope.settings);
             $rootScope.lists = BugListService.getLists();
@@ -196,10 +259,12 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             };
             $('#markAsDoneModal').modal();
         };
+
         $scope.assignToMe = function(issue) {
             var me = $scope.activeList.username;
             DataService.assign($scope.activeList, issue, me);
         };
+
         $scope.startProgress = function(issue) {
             issue.status = 'Coding In Progress';
             var list = $scope.activeList;
@@ -224,6 +289,7 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
                 alert('Failed to list transitions for issue: ' + JSON.stringify(error));
             });
         };
+
         $scope.stopProgress = function(issue) {
             issue.status = 'Open';
             var list = $scope.activeList;
@@ -251,17 +317,21 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
 
         $scope.markAsDone = function(madData) {
             console.log('Attempting to mark issue "'+madData.issue.summary+'" as done.');
+
             // Remove item from list
             var index;
             var found = false;
             var list = $scope.activeList;
+
             console.log('Finding issue with key: ' + madData.issue.key);
+
             angular.forEach($scope.data, function(dissue, i) {
                 if (dissue.key == madData.issue.key) {
                     index = i;
                     found = true;
                 }
             });
+
             if (found) {
                 console.log('Data item (issue) at index ' + index + ' will be removed.');
                 $scope.data.splice(index, 1);
@@ -273,11 +343,13 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             JiraService.listTransitions($scope.settings.jira, $scope.settings.username, $scope.settings.password, madData.issue.key, function(results) {
                 // Select the "Resolve" transition
                 var resolveTransition;
+
                 angular.forEach(results, function(transition) {
                     if (transition.name == 'Resolve Issue') {
                         resolveTransition = transition;
                     }
                 });
+
                 if (resolveTransition) {
                     // Perform the "Resolve" transition
                     console.log('Resolving issue using transition: ' + JSON.stringify(resolveTransition));

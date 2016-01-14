@@ -200,10 +200,10 @@
                                   <span>{{ issue.assignee }}</span>
                                 </td>
                                 <td nowrap="nowrap">
-                                  <button title="Mark as Done" ng-show="issue.status === 'Open' || issue.status === 'Coding In Progress'" ng-click="openMarkAsDoneDialog(issue)" class="btn btn-default btn-xs" type="button"><i class="fa fa-check"></i></button>
+                                  <button title="Mark as Done" ng-show="issue.status === 'Open' || issue.status === 'Coding In Progress' || issue.status === 'Reopened'" ng-click="openMarkAsDoneDialog(issue)" class="btn btn-default btn-xs" type="button"><i class="fa fa-check"></i></button>
                                   <button title="Assign to Me" ng-hide="activeList.username === issue.assigneeId" ng-click="assignToMe(issue)" class="btn btn-default btn-xs" type="button"><i class="fa fa-user"></i></button>
-                                  <button title="Start Progress" ng-show="issue.status === 'Open' && activeList.username === issue.assigneeId" ng-click="startProgress(issue)" class="btn btn-default btn-xs" type="button"><i class="fa fa-play"></i></button>
-                                  <button title="Stop Progress" ng-show="issue.status === 'Coding In Progress' && activeList.username === issue.assigneeId" ng-click="stopProgress(issue)" class="btn btn-default btn-xs" type="button"><i class="fa fa-stop"></i></button>
+                                  <button title="Start Progress" ng-show="(issue.status === 'Open' || issue.status === 'Reopened') && activeList.username === issue.assigneeId" ng-click="startProgress(issue)" class="btn btn-default btn-xs" type="button"><i class="fa fa-play"></i></button>
+                                  <button title="Stop Progress" ng-show="(issue.status === 'Coding In Progress' || issue.status === 'Reopened') && activeList.username === issue.assigneeId" ng-click="stopProgress(issue)" class="btn btn-default btn-xs" type="button"><i class="fa fa-stop"></i></button>
                                 </td>
                             </tr>
                         </tbody>

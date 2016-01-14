@@ -228,14 +228,12 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             };
 
             var that = this;
+            that.editorEnabled = false;
 
             DataService.savePriority($scope.activeList, issue, priority).put(request, function(result) {
                 issue.priority = result.fields.priority;
-                that.editorEnabled = false;
-
             }, function(error) {
                 console.log('Error saving priority for issue: ' + JSON.stringify(error));
-                that.editorEnabled = false;
             });
         };
 

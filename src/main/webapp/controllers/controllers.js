@@ -141,22 +141,14 @@ angular.module('myApp.controllers', ['myApp.services', 'ngAnimate'])
             JiraService.listVersions($scope.settings.jira, $scope.settings.username, $scope.settings.password,
                     $scope.settings.project, function(results)
             {
-                var filteredVersions = [];
-                var finalVersions = [];
-
+                var unreleasedVersions = [];
                 angular.forEach(results, function(version) {
                     if (!version.released) {
-                        filteredVersions.push(version);
-                    }
-
-                    if (version.name.endsWith('.Final') || version.name.search(/Beta\d*$/i) > -1 || version.name.search(/Alpha\d*$/i) > -1) {
-                        finalVersions.push(version);
+                        unreleasedVersions.push(version);
                     }
                 });
 
-                $scope.versions = filteredVersions;
-                finalVersions.reverse();
-                $scope.settings.finalVersions = finalVersions;
+                $scope.versions = unreleasedVersions;
                 $('#refresh-fix-versions').prop('disabled', false);
                 $('#refresh-fix-versions i').removeClass('fa-spin');
             }, function(error) {

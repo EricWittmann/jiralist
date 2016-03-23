@@ -200,6 +200,31 @@ angular.module('myApp.services', ['ngResource', 'ngAnimate'])
                 statuses[list.id] = 'error';
                 console.error(error);
             });
+            
+            endpoint = formatEndpoint('proxy/project/:key/versions', { key: list.project.key });
+            console.debug("Refreshing fix versions for list: " + list.name);
+            $resource(endpoint, {}, {
+                search: { method:'GET', isArray: true, headers: { 'Authorization' : 'Basic ' + enc } }
+            }).search(function(results) {
+                var finalVersions = [];
+
+                angular.forEach(results, function(version) {
+                    if (version.name.endsWith('.Final') || version.name.search(/Beta\d*$/i) > -1 || version.name.search(/Alpha\d*$/i) > -1) {
+                        finalVersions.push(version);
+                    }
+                });
+                
+                if (finalVersions.length != list.finalVersions.length) {
+                	console.debug("Found new fix versions - saving list: " + list.name);
+	                finalVersions.reverse();
+	                list.finalVersions = finalVersions;
+	                BugListService.saveList(list);
+                }
+            }, function(error) {
+                list.finalVersions = [];
+                alert("Error refreshing fix versions: " + JSON.stringify(error));
+            });
+            
         };
         
         var fiveMinutes = 60000 * 5;

@@ -108,7 +108,7 @@
                   <div class="form-group">
                     <label class="col-sm-3 control-label" for="mark-as-done-fixed-in">Fixed In</label>
                     <div class="col-sm-9">
-                      <select ng-model="madData.fixedIn" id="mark-as-done-fixed-in" class="form-control" ng-options="version.name for version in settings.finalVersions track by version.id">
+                      <select ng-model="madData.fixedIn" id="mark-as-done-fixed-in" class="form-control" ng-options="version.name for version in activeList.finalVersions track by version.id">
                       </select>
                     </div>
                   </div>

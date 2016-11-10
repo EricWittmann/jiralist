@@ -172,7 +172,7 @@
                                     ng-mouseover="hoverIn()"
                                     ng-mouseleave="hoverOut()">
                                     <div ng-hide="editorEnabled" style="position:relative">
-                                        <img title="{{ issue.priority.name }}"
+                                        <img title="{{ issue.priority.name }}" width="16" height="16"
                                              ng-src="{{ issue.priority.iconUrl }}"> {{ issue.priority.name }}
                                         <div class="priorityOverlay" ng-show="hoverEdit">
                                             <button title="Change the priority." 
